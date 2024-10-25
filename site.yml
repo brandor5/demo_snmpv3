@@ -1,0 +1,10 @@
+---
+- name: Enable snmpd on a system and create a user
+  hosts: demo
+  gather_facts: true
+  become: true
+
+  roles:
+    - snmp
+...
+

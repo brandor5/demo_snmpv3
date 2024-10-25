@@ -1,0 +1,35 @@
+---
+- name: Install snmp RPMs
+  ansible.builtin.dnf:
+    name: "{{ snmp_packages }}"
+    state: present
+
+- name: Check for snmp_user
+  ansible.builtin.command: grep "{{ snmp_user }}" /etc/snmp/snmpd.conf
+  changed_when: false
+  ignore_errors: true
+  register: snmp_user_present
+
+- name: Add user if not present
+  when: snmp_user_present.rc|bool
+  block:
+
+    - name: Stop snmpd
+      ansible.builtin.service:
+        name: snmpd
+        state: stopped
+
+    - name: Add user
+      ansible.builtin.command: net-snmp-create-v3-user -ro -a "{{ snmp_password }}" -x "{{ snmp_privpass }}" "{{ snmp_user }}"
+
+    - name: Start snmpd
+      ansible.builtin.service:
+        name: snmpd
+        state: started
+
+- name: Enable snmpd
+  ansible.builtin.service:
+    name: snmpd
+    state: started
+    enabled: true
+...
